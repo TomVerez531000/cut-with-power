@@ -156,7 +156,47 @@ function get_movements()
 	return module
 end
 
+function create_esp()
+	local module = {}
+
+	local highlights = {}
+	local function connect_chest(chest, visible)
+		local hg = Instance.new("Highlight", chest)
+		hg.Adornee = chest
+		local max = 15
+		local intensity = chest:GetAttribute("r")/max
+		local color = Color3.fromRGB(intensity*255, (1-intensity)*255, 0)
+		hg.FillColor = color
+		hg.OutlineColor = color
+		hg.FillTransparency = 0.5
+		hg.OutlineTransparency = 0
+		hg.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		hg.Enabled = visible
+
+		table.insert(highlights, hg)
+	end
+
+	module.Enabled = false
+	for _,v in pairs(workspace.Temp.Treasure:GetChildren()) do
+		if v:FindFirstChildOfClass("Highlight") then continue end
+		connect_chest(v, module.Enabled)
+	end
+	workspace.Temp.Treasure.ChildAdded:Connect(function(child)
+		connect_chest(child, module.Enabled)
+	end)
+
+	function module.ToggleESP(state)
+		module.Enabled = state
+		for i,v in pairs(highlights) do
+			v.Enabled = state
+		end
+	end
+
+	return module
+end
+
 local movements = get_movements()
+local esp = create_esp()
 
 local toggled = false
 game:GetService("UserInputService").InputBegan:Connect(function(Key, gamep)
@@ -176,5 +216,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, gamep)
 		end
 	elseif Key.KeyCode == Enum.KeyCode.H then
 		movements.toggleHitbox(not movements.HitboxEnabled)
+	elseif Key.KeyCode == Enum.KeyCode.J then
+		esp.ToggleESP(not esp.Enabled)
 	end
 end)
