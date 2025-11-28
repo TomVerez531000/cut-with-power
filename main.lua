@@ -161,8 +161,13 @@ function create_esp()
 
 	local highlights = {}
 	local function connect_chest(chest, visible)
-		local hg = Instance.new("Highlight", chest)
-		hg.Adornee = chest
+		local part = Instance.new("Part", chest)
+		part.CanCollide = false
+		part.Position = chest.Position
+		part.Anchored = true
+		part.Size = Vector3.new(2,2,2)
+		local hg = Instance.new("Highlight", part)
+		hg.Adornee = part
 		local max = 15
 		local intensity = chest:GetAttribute("r")/max
 		local color = Color3.fromRGB(intensity*255, (1-intensity)*255, 0)
@@ -193,6 +198,7 @@ function create_esp()
 	end
 
 	return module
+
 end
 
 local movements = get_movements()
