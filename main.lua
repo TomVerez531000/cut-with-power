@@ -293,7 +293,7 @@ end
 function get_autochests()
 	local module = {}
 
-	function delete_item(id)
+	local function delete_item(id)
 		local args = {
 			"DeleteItems",
 			{
@@ -327,7 +327,7 @@ function get_autochests()
 				local size = item.data.S2
 				local power = item.data.S3
 
-				local itemData = require(game.ReplicatedStorage.ItemDatabase[itemID])
+				local itemData = require(game.ReplicatedStorage.ItemDatabase)[itemID]
 				if itemData.Type == 1 then
 					if itemData.Name == "Strength" or itemData.Name == "Critical Up" then
 						if not (speed > 278 and size > 184 and power > 105) then
