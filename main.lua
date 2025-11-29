@@ -332,12 +332,12 @@ function get_autochests()
 					if itemData.Name == "Strength" or itemData.Name == "Critical Up" then
 						if not (speed > 278 and size > 184 and power > 105) then
 							delete_item(objectID)
-							print("Deleted "+itemData.Name+" because stats are too low.")
+							print("Deleted "..itemData.Name.." because stats are too low.")
 						end
 					else
 						if itemData.Rarity < 6 then
 							delete_item(objectID)
-							print("Deleted "+itemData.Name+" because rarity is only"+rarities[itemData.Rarity])
+							print("Deleted "..itemData.Name.." because rarity is only "..rarities[itemData.Rarity])
 						end
 					end
 				end
