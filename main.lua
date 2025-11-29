@@ -290,9 +290,72 @@ function get_autofarm()
 	return module
 end
 
+function get_autochests()
+	local module = {}
+
+	function delete_item(id)
+		local args = {
+			"DeleteItems",
+			{
+				id
+			}
+		}
+		game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
+	end
+
+	module.Enabled = false
+
+	local rarities = {
+		"Common",
+		"Uncommon",
+		"Rare",
+		"Epic",
+		"Legendary",
+		"Exotic",
+		"Divine"
+	}
+	game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent").OnClientEvent:Connect(function(a1, a2)
+		if not module.Enabled then return end
+		if a1 == "ChestLootBulkUpdate" then
+			for _,object in pairs(a2) do
+				local objectID = object[1]
+
+				local item = object[2]
+				local itemID = item.id
+
+				local speed = item.data.S1
+				local size = item.data.S2
+				local power = item.data.S3
+
+				local itemData = require(game.ReplicatedStorage.ItemDatabase[itemID])
+				if itemData.Type == 1 then
+					if itemData.Name == "Strength" or itemData.Name == "Critical Up" then
+						if not (speed > 278 and size > 184 and power > 105) then
+							delete_item(objectID)
+							print("Deleted "+itemData.Name+" because stats are too low.")
+						end
+					else
+						if itemData.Rarity < 6 then
+							delete_item(objectID)
+							print("Deleted "+itemData.Name+" because rarity is only"+rarities[itemData.Rarity])
+						end
+					end
+				end
+			end
+		end
+	end)
+
+	function module.ToggleAutoChest(state)
+		module.Enabled = state
+	end
+
+	return module
+end
+
 local movements = get_movements()
 local esp = create_esp()
 local autofarm = get_autofarm()
+local autochests = get_autochests()
 
 -- anti afk
 local bb=game:GetService("VirtualUser")
@@ -323,5 +386,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, gamep)
 		esp.ToggleESP(not esp.Enabled)
 	elseif Key.KeyCode == Enum.KeyCode.K then
 		autofarm.Toggle(not autofarm.Enabled)
+	elseif Key.KeyCode == Enum.KeyCode.L then
+		autochests.ToggleAutoChest(not autochests.Enabled)
 	end
 end)
