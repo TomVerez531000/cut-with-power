@@ -198,11 +198,101 @@ function create_esp()
 	end
 
 	return module
+end
 
+function get_autofarm()
+	local module = {}
+
+	module.Enabled = false
+	module.AlignPosition = nil
+
+	local noclipping = {}
+	local function noclip(state)
+		if state then
+			for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+				if v:IsA("BasePart") then
+					table.insert(noclipping, {
+						part = v,
+						cc = v.CanCollide,
+						connec = game:GetService("RunService").Stepped:Connect(function()
+							v.CanCollide = false
+						end)
+					})
+					v.CanCollide = false
+				end
+			end
+		else
+			for _,item in pairs(noclipping) do
+				if item.part and item.cc then
+					item.part.CanCollide = true
+				end
+				item.connec:Disconnect()
+			end
+			noclipping = {}
+		end
+	end
+
+	local function pickup_chest(chest)
+		local args = {
+			"PickUpChest",
+			chest.Name
+		}
+		game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
+	end
+
+	local function newAlignPosition(hrp)
+		local ap = Instance.new("AlignPosition", hrp)
+		ap.MaxForce = math.huge
+		ap.Responsiveness = 100
+		ap.Mode = Enum.PositionAlignmentMode.OneAttachment
+		ap.Attachment0 = hrp.RootAttachment
+		ap.Enabled = module.Enabled
+		module.AlignPosition = ap
+	end
+
+	local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	newAlignPosition(hrp)
+	game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+		local hrp = char:WaitForChild("HumanoidRootPart")
+		newAlignPosition(hrp)
+	end)
+
+	local farmThread = coroutine.create(function()
+		while task.wait() do
+			if not module.Enabled then coroutine.yield() end
+			for i,v in pairs(workspace.Temp.Treasure:GetChildren()) do
+				if not module.Enabled then coroutine.yield() end
+				if v:GetAttribute("r") < 8 then continue end
+				module.AlignPosition.Position = v.Position-Vector3.new(0,1,0)
+				while v.Parent do
+					if not module.Enabled then coroutine.yield() end
+					pickup_chest(v)
+					task.wait()
+				end
+			end
+		end
+	end)
+
+	function module.Toggle(state)
+		module.Enabled = state
+
+		if module.Enabled then
+			noclip(true)
+			module.AlignPosition.Enabled = true
+			coroutine.resume(farmThread)
+		else
+			noclip(false)
+			module.AlignPosition.Enabled = false
+		end
+	end
+
+	return module
 end
 
 local movements = get_movements()
 local esp = create_esp()
+local autofarm = get_autofarm()
 
 local toggled = false
 game:GetService("UserInputService").InputBegan:Connect(function(Key, gamep)
@@ -224,5 +314,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, gamep)
 		movements.toggleHitbox(not movements.HitboxEnabled)
 	elseif Key.KeyCode == Enum.KeyCode.J then
 		esp.ToggleESP(not esp.Enabled)
+	elseif Key.KeyCode == Enum.KeyCode.K then
+		autofarm.Toggle(not autofarm.Enabled)
 	end
 end)
