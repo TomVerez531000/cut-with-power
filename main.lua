@@ -294,6 +294,13 @@ local movements = get_movements()
 local esp = create_esp()
 local autofarm = get_autofarm()
 
+-- anti afk
+local bb=game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:connect(function()
+	bb:CaptureController()
+	bb:ClickButton2(Vector2.new())
+end)
+
 local toggled = false
 game:GetService("UserInputService").InputBegan:Connect(function(Key, gamep)
 	if gamep then return end
